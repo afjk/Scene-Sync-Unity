@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-148112614964010408
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efbf998eb66045d5813ca6bd148cf83c, type: 3}
+  m_Name: Gsplat URP Feature
+  m_EditorClassIdentifier: Gsplat::Gsplat.GsplatURPFeature
+  m_Active: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26,6 +39,7 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
   - {fileID: 3885147391959968341, guid: 6c1a5e1786130474c9d6ffde9b2c4134, type: 2}
+  - {fileID: -148112614964010408}
   m_RendererFeatureMap: 552acff5f7d0ea35
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
