@@ -1,6 +1,10 @@
 {
   "dependencies": {
+    "com.afjk.rapier": "https://github.com/afjk/rapier-unity.git?path=/Packages/com.afjk.rapier#v0.3.0",
     "com.afjk.scene-sync": "0.26.3",
+    "com.afjk.scene-sync-rapier": "https://github.com/afjk/afjk.jp.git?path=/unity/com.afjk.scene-sync-rapier#v0.26.3",
+    "com.arloopa.unitysplats": "https://github.com/arloopa/UnitySplats.git#v1.2.0",
+    "com.netpyoung.webp": "https://github.com/netpyoung/unity.webp.git?path=/unity_project/Assets/unity.webp#0.3.22",
     "com.styly.styly-xr-rig": "https://github.com/styly-dev/STYLY-XR-Rig.git?path=/Packages/com.styly.styly-xr-rig#737d02a3741cdef9fe1f007bb3e0019911ce0b40",
     "com.unity.polyspatial.visionos": "3.2.2",
     "com.unity.render-pipelines.universal": "17.3.0",

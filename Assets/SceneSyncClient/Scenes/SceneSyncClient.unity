@@ -119,7 +119,69 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &117145555
+--- !u!1001 &91559903
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 932545197216251793, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_Name
+      value: STYLY XR Rig
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+--- !u!20 &91559904 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 1956381348160497355, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
+  m_PrefabInstance: {fileID: 91559903}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &141475809
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,21 +189,158 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 117145556}
+  - component: {fileID: 141475816}
+  - component: {fileID: 141475815}
+  - component: {fileID: 141475814}
+  - component: {fileID: 141475813}
+  - component: {fileID: 141475812}
+  - component: {fileID: 141475811}
+  - component: {fileID: 141475810}
   m_Layer: 0
-  m_Name: RemoteAvatars
+  m_Name: SceneSyncRuntime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &117145556
+--- !u!114 &141475810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79a7b5a03e39441f9c629b043f76360e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: com.afjk.scene-sync-rapier.Runtime::Afjk.SceneSync.Rapier.SceneSyncRapierInteractionController
+  bridge: {fileID: 141475812}
+  targetCamera: {fileID: 91559904}
+  pickLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  pickMaxDistance: 200
+  moveSpeed: 6
+  fastMoveMultiplier: 3
+  lookSensitivity: 0.15
+  inputIntervalSeconds: 0.05
+  inputLeadTicks: 8
+  throwVelocityScale: 1.2
+  maxThrowSpeed: 18
+  autoAddPickColliders: 1
+  pickColliderRefreshInterval: 1
+  disableRemoteSnapshotCorrection: 1
+--- !u!114 &141475811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83a2dfc3731342f9a0d6be7d94fd79c8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SceneSyncClient.Runtime::SceneSync.UnityClient.SceneSyncRapierPlatformGuard
+  bridge: {fileID: 141475812}
+--- !u!114 &141475812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fb15cae625e4385b5c59f47753ae4c2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: com.afjk.scene-sync-rapier.Runtime::Afjk.SceneSync.Rapier.SceneSyncRapierBridge
+  autoRun: 1
+  useSceneClock: 1
+  requireSceneClock: 0
+  preferManagerPlaybackClock: 1
+  sceneSyncManager: {fileID: 141475815}
+  applyDynamicTransforms: 1
+  preserveMotionOnRebuild: 0
+  includeGround: 1
+  bodyRoot: {fileID: 621320925}
+  metadataScanInterval: 0.5
+  maxFrameStepSeconds: 0.25
+  maxClockStepsPerUpdate: 600
+  maxCollisionEventsPerDrain: 256
+  autoApplyRemoteSnapshots: 1
+  requestSnapshotOnHashMismatch: 1
+  snapshotApplyPolicy: 2
+  broadcastStateHash: 1
+  stateHashBroadcastTickInterval: 30
+  snapshotRequestCooldownSeconds: 1
+  logStateHash: 0
+--- !u!114 &141475813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 981f6677b52b40098ab8a82bc075fcc1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: com.afjk.scene-sync.Runtime::Afjk.SceneSync.SceneSyncPhysicsMetadata
+  scenePhysicsJson: '{"version":1,"enabled":true,"duration":10,"worldOptions":{"gravity":[0,-9.81,0],"ground":null,"timestep":0.016666666666666666}}'
+  objectPhysicsJson:
+--- !u!114 &141475814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c389e2b49c6dc46e488919e76107d3f3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SceneSyncClient.Runtime::SceneSync.UnityClient.SceneSyncClientController
+  sceneSyncManager: {fileID: 141475815}
+  room:
+  nickname: XR Client
+  connectOnStart: 1
+  resumeReconnectDelay: 0.5
+--- !u!114 &141475815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141475809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30e8d78a8afd84daaa6423a0fd6c8f30, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: com.afjk.scene-sync.Runtime::Afjk.SceneSync.SceneSyncManager
+  _presenceUrl: wss://afjk.jp/presence
+  _blobUrl:
+  _room:
+  _nickname: XR Client
+  _autoConnect: 0
+  _playbackClockMode: 0
+  _playbackClockFollowPolicy: 2
+  _allowPlaybackClockControl: 0
+  _sharedPlaybackClockBroadcastInterval: 0.25
+  _syncHierarchy: 0
+  _syncRoot: {fileID: 542698334}
+  includeManagerChildren: 0
+  managedObjects: []
+  temporaryRoot: {fileID: 621320925}
+  _fallbackImportMaterial: {fileID: 0}
+--- !u!4 &141475816
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 117145555}
+  m_GameObject: {fileID: 141475809}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -150,7 +349,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &118003510
+--- !u!1 &542698333
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,30 +357,31 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 118003511}
+  - component: {fileID: 542698334}
   m_Layer: 0
-  m_Name: ConnectionPanel3D
+  m_Name: SceneSyncRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &118003511
+  m_IsActive: 1
+--- !u!4 &542698334
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 118003510}
+  m_GameObject: {fileID: 542698333}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
-  m_LocalPosition: {x: 0, y: 1.4, z: 1.2}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 621320925}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &672890298
+--- !u!1 &621320924
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,7 +389,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 672890299}
+  - component: {fileID: 621320925}
   m_Layer: 0
   m_Name: RemoteObjects
   m_TagString: Untagged
@@ -197,22 +397,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &672890299
+--- !u!4 &621320925
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 672890298}
+  m_GameObject: {fileID: 621320924}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1166670110}
+  m_Father: {fileID: 542698334}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &885211571
+--- !u!1 &659958412
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -220,8 +420,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 885211573}
-  - component: {fileID: 885211572}
+  - component: {fileID: 659958414}
+  - component: {fileID: 659958413}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -229,13 +429,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &885211572
+--- !u!108 &659958413
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 885211571}
+  m_GameObject: {fileID: 659958412}
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
@@ -294,13 +494,13 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &885211573
+--- !u!4 &659958414
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 885211571}
+  m_GameObject: {fileID: 659958412}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821794, y: -0.23456973, z: 0.10938166, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -309,64 +509,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1037872320
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 932545197216251793, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_Name
-      value: STYLY XR Rig
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 932545197216251794, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 8ea6960e82d7c419c93a7f4f18e7b06e, type: 3}
---- !u!1 &1166670109
+--- !u!1 &865912507
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -374,31 +517,30 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1166670110}
+  - component: {fileID: 865912508}
   m_Layer: 0
-  m_Name: SceneSyncRoot
+  m_Name: RemoteAvatars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1166670110
+--- !u!4 &865912508
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166670109}
+  m_GameObject: {fileID: 865912507}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 672890299}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1895396809
+--- !u!1 &913618025
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -406,70 +548,24 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1895396812}
-  - component: {fileID: 1895396811}
-  - component: {fileID: 1895396810}
+  - component: {fileID: 913618026}
   m_Layer: 0
-  m_Name: SceneSyncRuntime
+  m_Name: ConnectionPanel3D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1895396810
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895396809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c389e2b49c6dc46e488919e76107d3f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SceneSyncClient.Runtime::SceneSync.UnityClient.SceneSyncClientController
-  sceneSyncManager: {fileID: 1895396811}
-  room: 
-  nickname: XR Client
-  connectOnStart: 1
-  resumeReconnectDelay: 0.5
---- !u!114 &1895396811
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895396809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30e8d78a8afd84daaa6423a0fd6c8f30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: com.afjk.scene-sync.Runtime::Afjk.SceneSync.SceneSyncManager
-  _presenceUrl: wss://afjk.jp/presence
-  _blobUrl: 
-  _room: 
-  _nickname: XR Client
-  _autoConnect: 0
-  _playbackClockMode: 0
-  _playbackClockFollowPolicy: 2
-  _allowPlaybackClockControl: 0
-  _sharedPlaybackClockBroadcastInterval: 0.25
-  _syncHierarchy: 0
-  _syncRoot: {fileID: 1166670110}
-  includeManagerChildren: 0
-  managedObjects: []
-  temporaryRoot: {fileID: 672890299}
-  _fallbackImportMaterial: {fileID: 0}
---- !u!4 &1895396812
+  m_IsActive: 0
+--- !u!4 &913618026
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895396809}
+  m_GameObject: {fileID: 913618025}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: 0, y: 1.4, z: 1.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -479,9 +575,9 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1037872320}
-  - {fileID: 1166670110}
-  - {fileID: 117145556}
-  - {fileID: 1895396812}
-  - {fileID: 118003511}
-  - {fileID: 885211573}
+  - {fileID: 91559903}
+  - {fileID: 542698334}
+  - {fileID: 865912508}
+  - {fileID: 141475816}
+  - {fileID: 913618026}
+  - {fileID: 659958414}

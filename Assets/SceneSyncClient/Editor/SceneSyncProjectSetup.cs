@@ -1,4 +1,6 @@
+using System;
 using Afjk.SceneSync;
+using Afjk.SceneSync.Rapier;
 using SceneSync.UnityClient;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -21,6 +23,10 @@ namespace SceneSync.UnityClient.Editor
             "Packages/com.styly.styly-xr-rig/Runtime/Settings/STYLY_Mobile_Renderer.asset";
         private const string RendererPath = SettingsFolder + "/SceneSyncMobileRenderer.asset";
         private const string RenderPipelineAssetPath = SettingsFolder + "/SceneSyncMobileRPAsset.asset";
+        private const string GsplatUrpFeatureTypeName = "Gsplat.GsplatURPFeature";
+        private const string DefaultRapierScenePhysicsJson =
+            "{\"version\":1,\"enabled\":true,\"duration\":10,\"worldOptions\":{" +
+            "\"gravity\":[0,-9.81,0],\"ground\":null,\"timestep\":0.016666666666666666}}";
 
         [MenuItem("Tools/Scene Sync XR Client/Create Minimal Project Setup")]
         public static void ConfigureAndCreateScene()
@@ -60,6 +66,9 @@ namespace SceneSync.UnityClient.Editor
                 AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(RenderPipelineAssetPath);
             if (existingPipeline != null)
             {
+                var existingRenderer =
+                    AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);
+                EnsureGaussianSplatRendererFeature(existingRenderer);
                 return existingPipeline;
             }
 
@@ -69,14 +78,50 @@ namespace SceneSync.UnityClient.Editor
                 throw new MissingReferenceException($"STYLY renderer was not found: {SourceRendererPath}");
             }
 
-            var renderer = Object.Instantiate(sourceRenderer);
+            var renderer = UnityEngine.Object.Instantiate(sourceRenderer);
             renderer.name = "SceneSyncMobileRenderer";
             AssetDatabase.CreateAsset(renderer, RendererPath);
+            EnsureGaussianSplatRendererFeature(renderer);
 
             var renderPipeline = UniversalRenderPipelineAsset.Create(renderer);
             renderPipeline.name = "SceneSyncMobileRPAsset";
             AssetDatabase.CreateAsset(renderPipeline, RenderPipelineAssetPath);
             return renderPipeline;
+        }
+
+        private static void EnsureGaussianSplatRendererFeature(UniversalRendererData renderer)
+        {
+            if (renderer == null)
+            {
+                throw new MissingReferenceException($"Scene Sync renderer was not found: {RendererPath}");
+            }
+
+            foreach (var feature in renderer.rendererFeatures)
+            {
+                if (feature != null && feature.GetType().FullName == GsplatUrpFeatureTypeName)
+                {
+                    return;
+                }
+            }
+
+            var featureType = Type.GetType(GsplatUrpFeatureTypeName + ", Gsplat", false);
+            if (featureType == null || !typeof(ScriptableRendererFeature).IsAssignableFrom(featureType))
+            {
+                throw new InvalidOperationException(
+                    "UnitySplats is installed, but GsplatURPFeature could not be loaded.");
+            }
+
+            var gsplatFeature = ScriptableObject.CreateInstance(featureType) as ScriptableRendererFeature;
+            if (gsplatFeature == null)
+            {
+                throw new InvalidOperationException("Failed to create the UnitySplats URP renderer feature.");
+            }
+
+            gsplatFeature.name = "Gsplat URP Feature";
+            gsplatFeature.hideFlags = HideFlags.HideInHierarchy;
+            AssetDatabase.AddObjectToAsset(gsplatFeature, renderer);
+            renderer.rendererFeatures.Add(gsplatFeature);
+            EditorUtility.SetDirty(renderer);
         }
 
         private static void CreateScene()
@@ -126,6 +171,25 @@ namespace SceneSync.UnityClient.Editor
 
             controller.Configure(manager, string.Empty, "XR Client");
             controller.ConnectOnStart = true;
+
+            var physicsMetadata = runtime.AddComponent<SceneSyncPhysicsMetadata>();
+            physicsMetadata.ConfigureScenePhysics(DefaultRapierScenePhysicsJson);
+
+            var rapierBridge = runtime.AddComponent<SceneSyncRapierBridge>();
+            rapierBridge.PlaybackClockManager = manager;
+            rapierBridge.BodyRoot = remoteObjects.transform;
+            rapierBridge.AutoRun = true;
+            rapierBridge.UseSceneClock = true;
+            rapierBridge.RequireSceneClock = false;
+            rapierBridge.PreferManagerPlaybackClock = true;
+            rapierBridge.PreserveMotionOnRebuild = false;
+
+            var rapierGuard = runtime.AddComponent<SceneSyncRapierPlatformGuard>();
+            rapierGuard.Configure(rapierBridge);
+
+            var rapierInteraction = runtime.AddComponent<SceneSyncRapierInteractionController>();
+            rapierInteraction.Bridge = rapierBridge;
+            rapierInteraction.TargetCamera = rigInstance.GetComponentInChildren<Camera>(true);
 
             var connectionPanel = new GameObject("ConnectionPanel3D");
             SceneManager.MoveGameObjectToScene(connectionPanel, scene);
