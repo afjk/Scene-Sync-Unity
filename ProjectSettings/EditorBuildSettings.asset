@@ -12,5 +12,6 @@ EditorBuildSettings:
     UnityEditor.XR.VisionOS.VisionOSSettings: {fileID: 11400000, guid: 68e6afa5f1768487a85be27ebcea9389, type: 2}
     com.unity.polyspatial.xr.xr_settings: {fileID: 11400000, guid: c55edacde12004ae79c68305321d01bf, type: 2}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 7b74f95544ea54ff6b6a2513846b2c39, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: d2c1db6773d5d4876aaba05ab391fbc8, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: b5ecb4e691f394c37bd9c96593f279d3, type: 2}
   m_UseUCBPForAssetBundles: 0

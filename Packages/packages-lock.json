@@ -284,7 +284,7 @@
     },
     "com.unity.xr.core-utils": {
       "version": "2.6.0",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.xr": "1.0.0"
@@ -354,6 +354,16 @@
         "com.unity.xr.legacyinputhelpers": "2.1.2"
       },
       "url": "https://packages.unity.com"
+    },
+    "com.unity.xr.openxr.picoxr": {
+      "version": "https://github.com/Pico-Developer/PICO-Unity-OpenXR-SDK.git#release_1.4.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.xr.core-utils": "2.2.0",
+        "com.unity.xr.openxr": "1.8.2"
+      },
+      "hash": "3aa3e62bff41df618529eeb60ff02c29a515dafe"
     },
     "com.unity.xr.visionos": {
       "version": "3.2.2",
