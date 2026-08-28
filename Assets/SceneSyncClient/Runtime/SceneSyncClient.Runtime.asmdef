@@ -1,0 +1,16 @@
+{
+  "name": "SceneSyncClient.Runtime",
+  "rootNamespace": "SceneSync.UnityClient",
+  "references": [
+    "com.afjk.scene-sync.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

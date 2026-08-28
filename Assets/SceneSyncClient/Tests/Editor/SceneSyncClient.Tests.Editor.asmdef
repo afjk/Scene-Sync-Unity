@@ -1,0 +1,24 @@
+{
+  "name": "SceneSyncClient.Tests.Editor",
+  "rootNamespace": "SceneSync.UnityClient.Tests.Editor",
+  "references": [
+    "SceneSyncClient.Runtime",
+    "com.afjk.scene-sync.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
