@@ -19,7 +19,7 @@ jobs:
   build-apk:
     name: Build ${{ matrix.preset }}
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -138,7 +138,7 @@ jobs:
           test -n "$UNITY_PASSWORD"
 
       - name: Build ${{ matrix.preset }} APK
-        timeout-minutes: 40
+        timeout-minutes: 25
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -150,6 +150,7 @@ jobs:
           unityVersion: ${{ env.UNITY_VERSION }}
           buildMethod: SceneSync.UnityClient.Editor.SceneSyncAndroidXrBuild.Build
           customParameters: >-
+            -ondemand=off
             -refreshImportMode InProcess
             -desiredWorkerCount 1
             -standbyWorkerCount 0
@@ -158,7 +159,7 @@ jobs:
           allowDirtyBuild: true
 
       - name: Upload ${{ matrix.preset }} diagnostics
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: unity-diagnostics-${{ matrix.target }}
