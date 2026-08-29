@@ -9,8 +9,11 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 namespace SceneSync.UnityClient.Tests.Editor
 {
@@ -64,7 +67,7 @@ namespace SceneSync.UnityClient.Tests.Editor
             Assert.That(rapierInteraction, Is.Not.Null);
             Assert.That(controller.Manager, Is.SameAs(manager));
             Assert.That(controller.ConfiguredRoom, Is.Empty);
-            Assert.That(controller.ConnectOnStart, Is.True);
+            Assert.That(controller.ConnectOnStart, Is.False);
             Assert.That(
                 SceneSyncPresenceUrl.BuildRoomUrl(manager.PresenceUrl, controller.ConfiguredRoom),
                 Is.EqualTo(manager.PresenceUrl),
@@ -105,6 +108,56 @@ namespace SceneSync.UnityClient.Tests.Editor
             var serializedManager = new SerializedObject(manager);
             var configuredSyncRoot = serializedManager.FindProperty("_syncRoot").objectReferenceValue;
             Assert.That(configuredSyncRoot, Is.SameAs(sceneSyncRoot.transform));
+        }
+
+        [Test]
+        public void ConnectionMenu_UsesXrUiAndAndroidSystemKeyboard()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var roots = scene.GetRootGameObjects();
+            var panelRoot = roots.Single(root => root.name == "ConnectionPanel3D");
+            var runtime = roots.Single(root => root.name == "SceneSyncRuntime");
+            var eventSystemRoot = roots.Single(root => root.name == "EventSystem");
+
+            var panel = panelRoot.GetComponent<SceneSyncConnectionPanel>();
+            var canvas = panelRoot.GetComponent<Canvas>();
+            var raycaster = panelRoot.GetComponent<TrackedDeviceGraphicRaycaster>();
+
+            Assert.That(panelRoot.activeSelf, Is.True);
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel.Controller, Is.SameAs(runtime.GetComponent<SceneSyncClientController>()));
+            Assert.That(panel.TargetCamera, Is.Not.Null);
+            Assert.That(canvas, Is.Not.Null);
+            Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.WorldSpace));
+            Assert.That(canvas.worldCamera, Is.SameAs(panel.TargetCamera));
+            Assert.That(raycaster, Is.Not.Null);
+            Assert.That(eventSystemRoot.GetComponent<EventSystem>(), Is.Not.Null);
+            Assert.That(eventSystemRoot.GetComponent<XRUIInputModule>(), Is.Not.Null);
+
+            Assert.That(panel.FullPanel, Is.Not.Null);
+            Assert.That(panel.FullPanel.activeSelf, Is.True);
+            Assert.That(panel.MinimizedPanel, Is.Not.Null);
+            Assert.That(panel.MinimizedPanel.activeSelf, Is.False);
+            Assert.That(panel.ConnectButton, Is.Not.Null);
+            Assert.That(panel.DisconnectButton, Is.Not.Null);
+            AssertSystemKeyboardInput(panel.RoomInput);
+            AssertSystemKeyboardInput(panel.NicknameInput);
+        }
+
+        private static void AssertSystemKeyboardInput(InputField inputField)
+        {
+            Assert.That(inputField, Is.Not.Null);
+            Assert.That(inputField.lineType, Is.EqualTo(InputField.LineType.SingleLine));
+            Assert.That(inputField.keyboardType, Is.EqualTo(TouchScreenKeyboardType.ASCIICapable));
+            Assert.That(inputField.shouldActivateOnSelect, Is.True);
+
+            // The public getter intentionally returns true outside Android, so
+            // inspect the serialized flag that the PICO player receives.
+            var serializedInput = new SerializedObject(inputField);
+            Assert.That(
+                serializedInput.FindProperty("m_HideMobileInput").boolValue,
+                Is.False,
+                "The native Android keyboard must remain visible.");
         }
 
         [Test]

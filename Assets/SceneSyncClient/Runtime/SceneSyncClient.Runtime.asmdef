@@ -3,7 +3,8 @@
   "rootNamespace": "SceneSync.UnityClient",
   "references": [
     "com.afjk.scene-sync.Runtime",
-    "com.afjk.scene-sync-rapier.Runtime"
+    "com.afjk.scene-sync-rapier.Runtime",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

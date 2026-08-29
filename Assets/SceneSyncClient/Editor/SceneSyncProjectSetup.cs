@@ -8,9 +8,12 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 namespace SceneSync.UnityClient.Editor
 {
@@ -96,6 +99,33 @@ namespace SceneSync.UnityClient.Editor
                 + ", warnings=" + report.summary.totalWarnings
                 + ", size=" + report.summary.totalSize
                 + ", time=" + report.summary.totalTime);
+        }
+
+        [MenuItem("Tools/Scene Sync XR Client/Add or Update Connection Menu")]
+        public static void AddOrUpdateConnectionMenu()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var runtime = FindRoot(scene, "SceneSyncRuntime");
+            var rig = FindRoot(scene, "STYLY XR Rig");
+            if (runtime == null || rig == null)
+            {
+                throw new MissingReferenceException(
+                    "SceneSyncRuntime or STYLY XR Rig was not found in the client scene.");
+            }
+
+            var controller = runtime.GetComponent<SceneSyncClientController>();
+            var camera = rig.GetComponentInChildren<Camera>(true);
+            if (controller == null || camera == null)
+            {
+                throw new MissingReferenceException(
+                    "The Scene Sync controller or XR camera was not found in the client scene.");
+            }
+
+            controller.ConnectOnStart = false;
+            CreateConnectionMenu(scene, controller, camera);
+            EnsureXrEventSystem(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            Debug.Log("[SceneSyncClient] Connection menu added or updated: " + ScenePath);
         }
 
         private static void ConfigureProject()
@@ -391,7 +421,7 @@ namespace SceneSync.UnityClient.Editor
             serializedManager.ApplyModifiedPropertiesWithoutUndo();
 
             controller.Configure(manager, string.Empty, "XR Client");
-            controller.ConnectOnStart = true;
+            controller.ConnectOnStart = false;
 
             var physicsMetadata = runtime.AddComponent<SceneSyncPhysicsMetadata>();
             physicsMetadata.ConfigureScenePhysics(DefaultRapierScenePhysicsJson);
@@ -412,12 +442,11 @@ namespace SceneSync.UnityClient.Editor
             rapierInteraction.Bridge = rapierBridge;
             rapierInteraction.TargetCamera = rigInstance.GetComponentInChildren<Camera>(true);
 
-            var connectionPanel = new GameObject("ConnectionPanel3D");
-            SceneManager.MoveGameObjectToScene(connectionPanel, scene);
-            connectionPanel.transform.SetPositionAndRotation(
-                new Vector3(0f, 1.4f, 1.2f),
-                Quaternion.Euler(0f, 180f, 0f));
-            connectionPanel.SetActive(false);
+            CreateConnectionMenu(
+                scene,
+                controller,
+                rigInstance.GetComponentInChildren<Camera>(true));
+            EnsureXrEventSystem(scene);
 
             var lightObject = new GameObject("Directional Light");
             SceneManager.MoveGameObjectToScene(lightObject, scene);
@@ -429,6 +458,380 @@ namespace SceneSync.UnityClient.Editor
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             Selection.activeGameObject = runtime;
+        }
+
+        private static void CreateConnectionMenu(
+            Scene scene,
+            SceneSyncClientController controller,
+            Camera camera)
+        {
+            var existingPanel = FindRoot(scene, "ConnectionPanel3D");
+            if (existingPanel != null)
+            {
+                UnityEngine.Object.DestroyImmediate(existingPanel);
+            }
+
+            var panelRoot = new GameObject(
+                "ConnectionPanel3D",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(TrackedDeviceGraphicRaycaster),
+                typeof(SceneSyncConnectionPanel));
+            SceneManager.MoveGameObjectToScene(panelRoot, scene);
+
+            var rootRect = panelRoot.GetComponent<RectTransform>();
+            rootRect.sizeDelta = new Vector2(780f, 500f);
+            rootRect.localScale = Vector3.one * 0.001f;
+            panelRoot.transform.SetPositionAndRotation(
+                new Vector3(0f, 1.4f, 1.2f),
+                Quaternion.identity);
+
+            var canvas = panelRoot.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            canvas.worldCamera = camera;
+            canvas.sortingOrder = 100;
+
+            var scaler = panelRoot.GetComponent<CanvasScaler>();
+            scaler.dynamicPixelsPerUnit = 10f;
+            scaler.referencePixelsPerUnit = 100f;
+
+            var fullPanel = CreateImage(
+                "FullPanel",
+                rootRect,
+                new Vector2(780f, 500f),
+                Vector2.zero,
+                new Color(0.035f, 0.055f, 0.09f, 0.96f));
+            CreateText(
+                "Title",
+                fullPanel.rectTransform,
+                "Scene Sync",
+                38,
+                FontStyle.Bold,
+                TextAnchor.MiddleLeft,
+                new Vector2(430f, 55f),
+                new Vector2(-135f, 215f),
+                Color.white);
+
+            var minimizeButton = CreateButton(
+                "MinimizeButton",
+                fullPanel.rectTransform,
+                "Minimize",
+                new Vector2(145f, 44f),
+                new Vector2(292f, 215f),
+                new Color(0.16f, 0.2f, 0.29f, 1f));
+
+            CreateText(
+                "ConnectionLabel",
+                fullPanel.rectTransform,
+                "Connection",
+                25,
+                FontStyle.Normal,
+                TextAnchor.MiddleLeft,
+                new Vector2(180f, 45f),
+                new Vector2(-275f, 150f),
+                new Color(0.7f, 0.8f, 0.93f, 1f));
+            var connectionStatus = CreateText(
+                "ConnectionStatus",
+                fullPanel.rectTransform,
+                "Disconnected",
+                25,
+                FontStyle.Bold,
+                TextAnchor.MiddleLeft,
+                new Vector2(430f, 45f),
+                new Vector2(90f, 150f),
+                Color.white);
+
+            CreateText(
+                "RoomLabel",
+                fullPanel.rectTransform,
+                "Room",
+                25,
+                FontStyle.Normal,
+                TextAnchor.MiddleLeft,
+                new Vector2(180f, 58f),
+                new Vector2(-275f, 82f),
+                new Color(0.7f, 0.8f, 0.93f, 1f));
+            var roomInput = CreateInputField(
+                "RoomInput",
+                fullPanel.rectTransform,
+                "LAN (automatic) or room code",
+                new Vector2(500f, 58f),
+                new Vector2(95f, 82f));
+
+            CreateText(
+                "NicknameLabel",
+                fullPanel.rectTransform,
+                "Nickname",
+                25,
+                FontStyle.Normal,
+                TextAnchor.MiddleLeft,
+                new Vector2(180f, 58f),
+                new Vector2(-275f, 12f),
+                new Color(0.7f, 0.8f, 0.93f, 1f));
+            var nicknameInput = CreateInputField(
+                "NicknameInput",
+                fullPanel.rectTransform,
+                "Device name",
+                new Vector2(500f, 58f),
+                new Vector2(95f, 12f));
+
+            CreateText(
+                "KeyboardHint",
+                fullPanel.rectTransform,
+                "Point and trigger to edit. Text input uses the system keyboard.",
+                20,
+                FontStyle.Normal,
+                TextAnchor.MiddleLeft,
+                new Vector2(690f, 38f),
+                new Vector2(0f, -48f),
+                new Color(0.62f, 0.7f, 0.82f, 1f));
+            var errorText = CreateText(
+                "ErrorText",
+                fullPanel.rectTransform,
+                string.Empty,
+                21,
+                FontStyle.Bold,
+                TextAnchor.MiddleLeft,
+                new Vector2(690f, 44f),
+                new Vector2(0f, -90f),
+                new Color(1f, 0.48f, 0.4f, 1f));
+
+            var connectButton = CreateButton(
+                "ConnectButton",
+                fullPanel.rectTransform,
+                "Connect",
+                new Vector2(210f, 58f),
+                new Vector2(105f, -166f),
+                new Color(0.08f, 0.43f, 0.9f, 1f));
+            var disconnectButton = CreateButton(
+                "DisconnectButton",
+                fullPanel.rectTransform,
+                "Disconnect",
+                new Vector2(210f, 58f),
+                new Vector2(335f, -166f),
+                new Color(0.55f, 0.16f, 0.17f, 1f));
+
+            var minimizedPanel = CreateImage(
+                "MinimizedPanel",
+                rootRect,
+                new Vector2(300f, 112f),
+                Vector2.zero,
+                new Color(0.035f, 0.055f, 0.09f, 0.96f));
+            var restoreButton = CreateButton(
+                "RestoreButton",
+                minimizedPanel.rectTransform,
+                string.Empty,
+                new Vector2(284f, 96f),
+                Vector2.zero,
+                new Color(0.08f, 0.28f, 0.52f, 1f));
+            var minimizedStatus = CreateText(
+                "MinimizedStatus",
+                restoreButton.GetComponent<RectTransform>(),
+                "Scene Sync\nDisconnected",
+                25,
+                FontStyle.Bold,
+                TextAnchor.MiddleCenter,
+                new Vector2(270f, 86f),
+                Vector2.zero,
+                Color.white);
+            minimizedPanel.gameObject.SetActive(false);
+
+            var panel = panelRoot.GetComponent<SceneSyncConnectionPanel>();
+            panel.Configure(
+                controller,
+                camera,
+                fullPanel.gameObject,
+                minimizedPanel.gameObject,
+                roomInput,
+                nicknameInput,
+                connectButton,
+                disconnectButton,
+                minimizeButton,
+                restoreButton,
+                connectionStatus,
+                minimizedStatus,
+                errorText);
+        }
+
+        private static void EnsureXrEventSystem(Scene scene)
+        {
+            EventSystem eventSystem = null;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                eventSystem = root.GetComponentInChildren<EventSystem>(true);
+                if (eventSystem != null)
+                {
+                    break;
+                }
+            }
+
+            if (eventSystem == null)
+            {
+                var eventSystemObject = new GameObject(
+                    "EventSystem",
+                    typeof(EventSystem),
+                    typeof(XRUIInputModule));
+                SceneManager.MoveGameObjectToScene(eventSystemObject, scene);
+                return;
+            }
+
+            if (eventSystem.GetComponent<XRUIInputModule>() == null)
+            {
+                eventSystem.gameObject.AddComponent<XRUIInputModule>();
+            }
+        }
+
+        private static GameObject FindRoot(Scene scene, string name)
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                if (root.name == name)
+                {
+                    return root;
+                }
+            }
+            return null;
+        }
+
+        private static Image CreateImage(
+            string name,
+            RectTransform parent,
+            Vector2 size,
+            Vector2 position,
+            Color color)
+        {
+            var gameObject = CreateUiObject(name, parent, size, position);
+            var image = gameObject.AddComponent<Image>();
+            image.color = color;
+            return image;
+        }
+
+        private static Text CreateText(
+            string name,
+            RectTransform parent,
+            string value,
+            int fontSize,
+            FontStyle fontStyle,
+            TextAnchor alignment,
+            Vector2 size,
+            Vector2 position,
+            Color color)
+        {
+            var gameObject = CreateUiObject(name, parent, size, position);
+            var text = gameObject.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.text = value;
+            text.fontSize = fontSize;
+            text.fontStyle = fontStyle;
+            text.alignment = alignment;
+            text.color = color;
+            text.raycastTarget = false;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            return text;
+        }
+
+        private static InputField CreateInputField(
+            string name,
+            RectTransform parent,
+            string placeholderValue,
+            Vector2 size,
+            Vector2 position)
+        {
+            var background = CreateImage(
+                name,
+                parent,
+                size,
+                position,
+                new Color(0.11f, 0.14f, 0.21f, 1f));
+            var inputField = background.gameObject.AddComponent<InputField>();
+            inputField.targetGraphic = background;
+            inputField.characterLimit = 80;
+            inputField.keyboardType = TouchScreenKeyboardType.ASCIICapable;
+            inputField.shouldActivateOnSelect = true;
+            inputField.shouldHideMobileInput = false;
+
+            var text = CreateText(
+                "Text",
+                background.rectTransform,
+                string.Empty,
+                25,
+                FontStyle.Normal,
+                TextAnchor.MiddleLeft,
+                size - new Vector2(28f, 8f),
+                Vector2.zero,
+                Color.white);
+            text.supportRichText = false;
+            text.raycastTarget = false;
+
+            var placeholder = CreateText(
+                "Placeholder",
+                background.rectTransform,
+                placeholderValue,
+                23,
+                FontStyle.Italic,
+                TextAnchor.MiddleLeft,
+                size - new Vector2(28f, 8f),
+                Vector2.zero,
+                new Color(0.52f, 0.59f, 0.7f, 1f));
+            placeholder.raycastTarget = false;
+
+            inputField.textComponent = text;
+            inputField.placeholder = placeholder;
+            return inputField;
+        }
+
+        private static Button CreateButton(
+            string name,
+            RectTransform parent,
+            string label,
+            Vector2 size,
+            Vector2 position,
+            Color color)
+        {
+            var image = CreateImage(name, parent, size, position, color);
+            var button = image.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            var colors = button.colors;
+            colors.normalColor = color;
+            colors.highlightedColor = Color.Lerp(color, Color.white, 0.18f);
+            colors.pressedColor = Color.Lerp(color, Color.black, 0.2f);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color(0.18f, 0.2f, 0.24f, 0.7f);
+            button.colors = colors;
+
+            if (!string.IsNullOrEmpty(label))
+            {
+                CreateText(
+                    "Label",
+                    image.rectTransform,
+                    label,
+                    24,
+                    FontStyle.Bold,
+                    TextAnchor.MiddleCenter,
+                    size - new Vector2(8f, 8f),
+                    Vector2.zero,
+                    Color.white);
+            }
+            return button;
+        }
+
+        private static GameObject CreateUiObject(
+            string name,
+            RectTransform parent,
+            Vector2 size,
+            Vector2 position)
+        {
+            var gameObject = new GameObject(name, typeof(RectTransform));
+            var rect = gameObject.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
+            return gameObject;
         }
 
         private static void EnsureFolder(string parent, string child)
