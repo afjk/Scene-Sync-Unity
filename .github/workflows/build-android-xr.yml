@@ -19,7 +19,7 @@ jobs:
   build-apk:
     name: Build ${{ matrix.preset }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:
@@ -73,7 +73,8 @@ jobs:
                 .["com.htc.upm.vive.openxr"],
                 .["com.unity.xr.androidxr-openxr"],
                 .["com.unity.xr.meta-openxr"],
-                .["com.unity.xr.openxr.picoxr"]
+                .["com.unity.xr.openxr.picoxr"],
+                .["io.github.hatayama.uloopmcp"]
               )
               | .dependencies[$package] = $version
               | .scopedRegistries |= map(
@@ -101,15 +102,20 @@ jobs:
           jq -e \
             --arg package "$XR_PACKAGE_NAME" \
             --arg version "$XR_PACKAGE_VERSION" \
-            '.dependencies[$package] == $version' \
+            '.dependencies[$package] == $version
+              and .dependencies["io.github.hatayama.uloopmcp"] == null' \
             "$MANIFEST" > /dev/null
 
       - name: Free up disk space
         uses: jlumbroso/free-disk-space@main
         with:
+          android: true
+          dotnet: true
+          haskell: true
           tool-cache: true
           docker-images: true
-          large-packages: true
+          large-packages: false
+          swap-storage: true
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -132,6 +138,7 @@ jobs:
           test -n "$UNITY_PASSWORD"
 
       - name: Build ${{ matrix.preset }} APK
+        timeout-minutes: 40
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -142,8 +149,24 @@ jobs:
           targetPlatform: Android
           unityVersion: ${{ env.UNITY_VERSION }}
           buildMethod: SceneSync.UnityClient.Editor.SceneSyncAndroidXrBuild.Build
-          customParameters: -sceneSyncXrTarget ${{ matrix.target }} -sceneSyncOutput build/${{ matrix.apk }}
+          customParameters: >-
+            -refreshImportMode InProcess
+            -desiredWorkerCount 1
+            -standbyWorkerCount 0
+            -sceneSyncXrTarget ${{ matrix.target }}
+            -sceneSyncOutput build/${{ matrix.apk }}
           allowDirtyBuild: true
+
+      - name: Upload ${{ matrix.preset }} diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-diagnostics-${{ matrix.target }}
+          path: |
+            Logs/
+            Library/LastBuild.buildreport
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Verify ${{ matrix.preset }} APK
         shell: bash
