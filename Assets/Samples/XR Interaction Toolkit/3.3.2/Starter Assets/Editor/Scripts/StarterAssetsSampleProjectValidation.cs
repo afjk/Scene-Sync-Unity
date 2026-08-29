@@ -44,6 +44,9 @@ namespace UnityEditor.XR.Interaction.Toolkit.Samples
         [InitializeOnLoadMethod]
         static void RegisterProjectValidationRules()
         {
+            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
+                return;
+
             // In the Player Settings UI we have to delay the call one frame to let the settings provider get initialized
             // since we need to access the settings asset to set the rule's non-delegate properties (FixItAutomatic).
             EditorApplication.delayCall += AddRulesAndRunCheck;

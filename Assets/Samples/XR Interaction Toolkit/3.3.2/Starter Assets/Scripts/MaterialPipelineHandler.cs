@@ -12,6 +12,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
     {
         static RenderPipelineValidation()
         {
+            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
+                return;
+
             foreach (var pipelineHandler in GetAllInstances())
                 pipelineHandler.AutoRefreshPipelineShaders();
         }
@@ -69,7 +72,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 #if UNITY_EDITOR
         void OnEnable()
         {
-            if (Application.isPlaying)
+            if (Application.isPlaying || Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
                 return;
             AutoRefreshPipelineShaders();
         }

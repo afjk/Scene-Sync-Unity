@@ -118,6 +118,9 @@ namespace UnityEditor.XR.Interaction.Toolkit.Samples.Hands.Editor
         [InitializeOnLoadMethod]
         static void RegisterProjectValidationRules()
         {
+            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
+                return;
+
             foreach (var buildTargetGroup in s_BuildTargetGroups)
             {
                 BuildValidator.AddRules(buildTargetGroup, s_BuildValidationRules);

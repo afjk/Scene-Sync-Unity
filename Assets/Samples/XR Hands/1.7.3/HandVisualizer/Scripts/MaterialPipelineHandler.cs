@@ -12,6 +12,9 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
     {
         static RenderPipelineValidation()
         {
+            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
+                return;
+
             // Use delayCall to ensure this runs after the editor is fully initialized and all assets are imported.
             // Without delayCall, this script may execute before new assets (such as newly imported samples)
             // are registered in the AssetDatabase, so they won't be found or converted.
@@ -75,7 +78,7 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
 #if UNITY_EDITOR
         void OnEnable()
         {
-            if (Application.isPlaying)
+            if (Application.isPlaying || Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
                 return;
             AutoRefreshPipelineShaders();
         }
