@@ -15,13 +15,20 @@
 - Unity CLI Loop `2.1.10`（開発・動作確認用）
 
 初期シーンは `Assets/SceneSyncClient/Scenes/SceneSyncClient.unity` です。
-再生するとSceneSyncへ自動接続します。`SceneSyncClientController` のRoomが空の場合は、
-Presence Serverが送信元IPから割り当てるLAN内のRoomへ接続します。特定のRoomへ接続する場合だけ、
-Roomへコードを設定してください。
+起動すると視界の前に小型のScene Syncメニューが表示されます。右controllerのrayで`Room`または
+`Nickname`を選択すると、PICO/Androidのシステムキーボードが開きます。`Connect`を選択すると接続し、
+接続後はMR表示を遮らないサイズへ縮小します。縮小パネルを選択するとフル表示へ戻ります。
+
+`Room`が空の場合は、Presence Serverが送信元IPから割り当てるLAN内のRoomへ接続します。
+特定のRoomへ接続する場合だけコードを入力してください。最後に接続した`Room`と`Nickname`は端末へ保存します。
 
 シーンを再生成する場合は、Unity Editorで次のメニューを実行します。
 
 `Tools > Scene Sync XR Client > Create Minimal Project Setup`
+
+既存シーンの接続メニューだけを作り直す場合は、次のメニューを実行します。
+
+`Tools > Scene Sync XR Client > Add or Update Connection Menu`
 
 ## Rapier物理同期
 

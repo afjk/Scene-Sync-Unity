@@ -6,7 +6,9 @@
     "com.afjk.scene-sync.Runtime",
     "com.afjk.scene-sync-rapier.Runtime",
     "Unity.RenderPipelines.Core.Runtime",
-    "Unity.RenderPipelines.Universal.Runtime"
+    "Unity.RenderPipelines.Universal.Runtime",
+    "UnityEngine.UI",
+    "Unity.XR.Interaction.Toolkit"
   ],
   "includePlatforms": [
     "Editor"
