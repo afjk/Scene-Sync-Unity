@@ -50,3 +50,23 @@ UnitySplatsのXR対応はURP Single Pass InstancedまたはMulti-passです。Qu
 visionOSでの性能・stereo表示・passthrough併用は、それぞれ実機で追加検証が必要です。
 
 実機向けにビルドするには、AndroidおよびvisionOSのBuild Supportモジュールを別途インストールする必要があります。
+
+## Pull RequestのAndroid XRビルド
+
+`main`向けPull Requestを作成すると、GameCIで次のDebug APKを並列ビルドします。
+構成とartifactの保持期間（14日）はScene Sync Godot版に合わせています。
+
+| Target | Artifact | APK |
+| --- | --- | --- |
+| Meta Quest 3 | `scene-sync-unity-quest3-debug` | `scene-sync-unity-quest3-debug.apk` |
+| PICO 4 Ultra | `scene-sync-unity-pico4-ultra-debug` | `scene-sync-unity-pico4-ultra-debug.apk` |
+| VIVE Focus Vision | `scene-sync-unity-vive-focus-vision-debug` | `scene-sync-unity-vive-focus-vision-debug.apk` |
+| Android XR | `scene-sync-unity-android-xr-debug` | `scene-sync-unity-android-xr-debug.apk` |
+
+GitHub repositoryの`Settings > Secrets and variables > Actions`へ、GameCI用の
+`UNITY_LICENSE`、`UNITY_EMAIL`、`UNITY_PASSWORD`を登録してください。workflowは
+`workflow_dispatch`から手動実行することもできます。forkからのPull RequestではGitHubの仕様上、
+repository secretsを利用できないため、APKビルドは信頼済みbranchから実行してください。
+
+PICO OpenXRとVIVE OpenXRは同一Unity projectへ同時導入すると型名が衝突するため、各matrix jobは
+checkout後に対象機種のvendor packageだけを選択してからUnityを起動します。

@@ -6,6 +6,7 @@ using System.Text;
 using Afjk.SceneSync;
 using Afjk.SceneSync.Rapier;
 using NUnit.Framework;
+using SceneSync.UnityClient.Editor;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -38,6 +39,46 @@ namespace SceneSync.UnityClient.Tests.Editor
             "Gsplat/Standard",
             "Gsplat/Global",
         };
+
+        [Test]
+        public void AndroidXrCiProfiles_MatchGodotArtifactMatrix()
+        {
+            var profiles = SceneSyncAndroidXrBuild.Profiles;
+
+            Assert.That(
+                profiles.Select(profile => profile.Target),
+                Is.EqualTo(new[]
+                {
+                    "quest3",
+                    "pico4-ultra",
+                    "vive-focus-vision",
+                    "android-xr",
+                }));
+            Assert.That(
+                profiles.Select(profile => profile.ApkFileName),
+                Is.EqualTo(new[]
+                {
+                    "scene-sync-unity-quest3-debug.apk",
+                    "scene-sync-unity-pico4-ultra-debug.apk",
+                    "scene-sync-unity-vive-focus-vision-debug.apk",
+                    "scene-sync-unity-android-xr-debug.apk",
+                }));
+            Assert.That(profiles.All(profile => profile.FeatureIds.Length > 0), Is.True);
+            Assert.That(profiles.All(profile => profile.MinimumApiLevel >= 24), Is.True);
+
+            const string workflowPath = ".github/workflows/build-android-xr.yml";
+            Assert.That(File.Exists(workflowPath), Is.True, "Android XR workflow is missing.");
+            var workflow = File.ReadAllText(workflowPath);
+            Assert.That(workflow, Does.Contain("game-ci/unity-builder@v4"));
+            Assert.That(workflow, Does.Contain("retention-days: 14"));
+            Assert.That(workflow, Does.Contain("buildMethod: " + SceneSyncAndroidXrBuild.BuildMethod));
+            foreach (var profile in profiles)
+            {
+                Assert.That(workflow, Does.Contain("target: " + profile.Target));
+                Assert.That(workflow, Does.Contain("apk: " + profile.ApkFileName));
+                Assert.That(workflow, Does.Contain("package_name: " + profile.RequiredPackage));
+            }
+        }
 
         [Test]
         public void MinimalScene_HasViewerOnlySceneSyncConfiguration()

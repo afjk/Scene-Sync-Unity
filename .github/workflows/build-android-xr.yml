@@ -1,0 +1,167 @@
+name: Build Android XR Debug APKs
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-xr-apk-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  UNITY_VERSION: 6000.3.20f1
+
+jobs:
+  build-apk:
+    name: Build ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: Meta Quest 3 Debug
+            target: quest3
+            package_name: com.unity.xr.meta-openxr
+            package_version: 2.3.0
+            apk: scene-sync-unity-quest3-debug.apk
+            artifact: scene-sync-unity-quest3-debug
+          - preset: PICO 4 Ultra Debug
+            target: pico4-ultra
+            package_name: com.unity.xr.openxr.picoxr
+            package_version: "https://github.com/Pico-Developer/PICO-Unity-OpenXR-SDK.git#release_1.4.0"
+            apk: scene-sync-unity-pico4-ultra-debug.apk
+            artifact: scene-sync-unity-pico4-ultra-debug
+          - preset: VIVE Focus Vision Debug
+            target: vive-focus-vision
+            package_name: com.htc.upm.vive.openxr
+            package_version: 2.5.1
+            apk: scene-sync-unity-vive-focus-vision-debug.apk
+            artifact: scene-sync-unity-vive-focus-vision-debug
+          - preset: Android XR Debug
+            target: android-xr
+            package_name: com.unity.xr.androidxr-openxr
+            package_version: 1.0.1
+            apk: scene-sync-unity-android-xr-debug.apk
+            artifact: scene-sync-unity-android-xr-debug
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Select ${{ matrix.preset }} vendor package
+        shell: bash
+        env:
+          XR_PACKAGE_NAME: ${{ matrix.package_name }}
+          XR_PACKAGE_VERSION: ${{ matrix.package_version }}
+        run: |
+          set -euo pipefail
+
+          MANIFEST=Packages/manifest.json
+          UPDATED_MANIFEST="$RUNNER_TEMP/manifest-${{ matrix.target }}.json"
+          jq \
+            --arg package "$XR_PACKAGE_NAME" \
+            --arg version "$XR_PACKAGE_VERSION" \
+            '
+              .dependencies |= del(
+                .["com.htc.upm.vive.openxr"],
+                .["com.unity.xr.androidxr-openxr"],
+                .["com.unity.xr.meta-openxr"],
+                .["com.unity.xr.openxr.picoxr"]
+              )
+              | .dependencies[$package] = $version
+              | .scopedRegistries |= map(
+                  if .name == "OpenUPM" then
+                    .scopes = (
+                      if $package == "com.htc.upm.vive.openxr" then
+                        (.scopes + ["com.htc"] | unique)
+                      else
+                        (.scopes | map(select(. != "com.htc")))
+                      end
+                    )
+                  else . end
+                )
+            ' "$MANIFEST" > "$UPDATED_MANIFEST"
+          mv "$UPDATED_MANIFEST" "$MANIFEST"
+
+          test "$(
+            jq '[.dependencies | keys[] | select(
+              . == "com.htc.upm.vive.openxr"
+              or . == "com.unity.xr.androidxr-openxr"
+              or . == "com.unity.xr.meta-openxr"
+              or . == "com.unity.xr.openxr.picoxr"
+            )] | length' "$MANIFEST"
+          )" -eq 1
+          jq -e \
+            --arg package "$XR_PACKAGE_NAME" \
+            --arg version "$XR_PACKAGE_VERSION" \
+            '.dependencies[$package] == $version' \
+            "$MANIFEST" > /dev/null
+
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          docker-images: true
+          large-packages: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
+
+      - name: Verify Unity CI secrets
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$UNITY_LICENSE"
+          test -n "$UNITY_EMAIL"
+          test -n "$UNITY_PASSWORD"
+
+      - name: Build ${{ matrix.preset }} APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          targetPlatform: Android
+          unityVersion: ${{ env.UNITY_VERSION }}
+          buildMethod: SceneSync.UnityClient.Editor.SceneSyncAndroidXrBuild.Build
+          customParameters: -sceneSyncXrTarget ${{ matrix.target }} -sceneSyncOutput build/${{ matrix.apk }}
+          allowDirtyBuild: true
+
+      - name: Verify ${{ matrix.preset }} APK
+        shell: bash
+        env:
+          OUTPUT_APK: build/${{ matrix.apk }}
+        run: |
+          set -euo pipefail
+          test -s "$OUTPUT_APK"
+          APK_ENTRIES="$RUNNER_TEMP/${{ matrix.target }}-apk-entries.txt"
+          unzip -Z1 "$OUTPUT_APK" > "$APK_ENTRIES"
+          grep -Fxq 'lib/arm64-v8a/libunity.so' "$APK_ENTRIES"
+          grep -Fxq 'lib/arm64-v8a/libil2cpp.so' "$APK_ENTRIES"
+          grep -Fxq 'lib/arm64-v8a/librapier_unity_ffi.so' "$APK_ENTRIES"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/${{ matrix.apk }}
+          if-no-files-found: error
+          retention-days: 14
