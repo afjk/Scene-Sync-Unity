@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Afjk.SceneSync;
 using Afjk.SceneSync.Rapier;
 using SceneSync.UnityClient;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -21,9 +24,33 @@ namespace SceneSync.UnityClient.Editor
             "Packages/com.styly.styly-xr-rig/Runtime/STYLY XR Rig.prefab";
         private const string SourceRendererPath =
             "Packages/com.styly.styly-xr-rig/Runtime/Settings/STYLY_Mobile_Renderer.asset";
+        private const string SourceRenderPipelinePath =
+            "Packages/com.styly.styly-xr-rig/Runtime/Settings/STYLY_Mobile_RPAsset.asset";
         private const string RendererPath = SettingsFolder + "/SceneSyncMobileRenderer.asset";
         private const string RenderPipelineAssetPath = SettingsFolder + "/SceneSyncMobileRPAsset.asset";
+        private const string RuntimeShaderVariantsPath =
+            SettingsFolder + "/SceneSyncRuntimeShaders.shadervariants";
         private const string GsplatUrpFeatureTypeName = "Gsplat.GsplatURPFeature";
+        private static readonly string[] RequiredRuntimeShaderNames =
+        {
+            "Standard",
+            "Unlit/Texture",
+            "Universal Render Pipeline/Lit",
+            "Universal Render Pipeline/Unlit",
+            "Shader Graphs/glTF-pbrMetallicRoughness",
+            "Shader Graphs/glTF-unlit",
+            "Shader Graphs/glTF-pbrSpecularGlossiness",
+            "Shader Graphs/glTF-pbrMetallicRoughness-Clearcoat",
+            "Gsplat/Standard",
+            "Gsplat/Global",
+        };
+        private static readonly string[] GltfAlphaTestShaderNames =
+        {
+            "Shader Graphs/glTF-pbrMetallicRoughness",
+            "Shader Graphs/glTF-unlit",
+            "Shader Graphs/glTF-pbrSpecularGlossiness",
+            "Shader Graphs/glTF-pbrMetallicRoughness-Clearcoat",
+        };
         private const string DefaultRapierScenePhysicsJson =
             "{\"version\":1,\"enabled\":true,\"duration\":10,\"worldOptions\":{" +
             "\"gravity\":[0,-9.81,0],\"ground\":null,\"timestep\":0.016666666666666666}}";
@@ -40,6 +67,37 @@ namespace SceneSync.UnityClient.Editor
             Debug.Log($"[SceneSyncClient] Minimal project setup created: {ScenePath}");
         }
 
+        [MenuItem("Tools/Scene Sync XR Client/Build PICO APK")]
+        public static void BuildPicoApk()
+        {
+            EnsureRuntimeRenderingConfiguration();
+            AssetDatabase.SaveAssets();
+
+            var enabledScenes = new List<string>();
+            foreach (var scene in EditorBuildSettings.scenes)
+            {
+                if (scene.enabled)
+                {
+                    enabledScenes.Add(scene.path);
+                }
+            }
+
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = enabledScenes.ToArray(),
+                locationPathName = "Build/pico.apk",
+                target = BuildTarget.Android,
+                options = BuildOptions.None,
+            });
+
+            Debug.Log(
+                "[SceneSyncClient] PICO build result=" + report.summary.result
+                + ", errors=" + report.summary.totalErrors
+                + ", warnings=" + report.summary.totalWarnings
+                + ", size=" + report.summary.totalSize
+                + ", time=" + report.summary.totalTime);
+        }
+
         private static void ConfigureProject()
         {
             PlayerSettings.companyName = "afjk";
@@ -47,8 +105,12 @@ namespace SceneSync.UnityClient.Editor
             PlayerSettings.bundleVersion = "0.1.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
 
-            var renderPipeline = GetOrCreateRenderPipeline();
+            EnsureRuntimeRenderingConfiguration();
+        }
 
+        public static void EnsureRuntimeRenderingConfiguration()
+        {
+            var renderPipeline = GetOrCreateRenderPipeline();
             GraphicsSettings.defaultRenderPipeline = renderPipeline;
 
             var originalQualityLevel = QualitySettings.GetQualityLevel();
@@ -58,34 +120,193 @@ namespace SceneSync.UnityClient.Editor
                 QualitySettings.renderPipeline = renderPipeline;
             }
             QualitySettings.SetQualityLevel(originalQualityLevel, false);
+
+            EnsureRuntimeShadersIncluded();
+            EnsureRuntimeShaderVariantsIncluded();
+        }
+
+        private static void EnsureRuntimeShadersIncluded()
+        {
+            var settingsObjects = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
+            if (settingsObjects == null || settingsObjects.Length == 0)
+            {
+                throw new MissingReferenceException("GraphicsSettings.asset could not be loaded.");
+            }
+
+            var serializedSettings = new SerializedObject(settingsObjects[0]);
+            var shaders = serializedSettings.FindProperty("m_AlwaysIncludedShaders");
+            if (shaders == null || !shaders.isArray)
+            {
+                throw new MissingMemberException("GraphicsSettings.m_AlwaysIncludedShaders was not found.");
+            }
+
+            foreach (var shaderName in RequiredRuntimeShaderNames)
+            {
+                var shader = Shader.Find(shaderName);
+                if (shader == null)
+                {
+                    throw new MissingReferenceException("Required runtime shader was not found: " + shaderName);
+                }
+
+                var alreadyIncluded = false;
+                for (var index = 0; index < shaders.arraySize; index++)
+                {
+                    if (shaders.GetArrayElementAtIndex(index).objectReferenceValue == shader)
+                    {
+                        alreadyIncluded = true;
+                        break;
+                    }
+                }
+
+                if (alreadyIncluded)
+                {
+                    continue;
+                }
+
+                var newIndex = shaders.arraySize;
+                shaders.InsertArrayElementAtIndex(newIndex);
+                shaders.GetArrayElementAtIndex(newIndex).objectReferenceValue = shader;
+            }
+
+            serializedSettings.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void EnsureRuntimeShaderVariantsIncluded()
+        {
+            EnsureFolder(ClientRoot, "Settings");
+
+            var collection = AssetDatabase.LoadAssetAtPath<ShaderVariantCollection>(
+                RuntimeShaderVariantsPath);
+            if (collection == null)
+            {
+                collection = new ShaderVariantCollection();
+                AssetDatabase.CreateAsset(collection, RuntimeShaderVariantsPath);
+            }
+
+            collection.Clear();
+            foreach (var shaderName in GltfAlphaTestShaderNames)
+            {
+                var shader = Shader.Find(shaderName);
+                if (shader == null)
+                {
+                    Debug.LogWarning(
+                        "[SceneSyncClient] Runtime alpha-test shader was not found: " + shaderName);
+                    continue;
+                }
+
+                AddShaderVariant(
+                    collection,
+                    new ShaderVariantCollection.ShaderVariant(
+                        shader,
+                        PassType.ScriptableRenderPipeline,
+                        "_ALPHATEST_ON"));
+                AddShaderVariant(
+                    collection,
+                    new ShaderVariantCollection.ShaderVariant(
+                        shader,
+                        PassType.ShadowCaster,
+                        "_ALPHATEST_ON"));
+            }
+            EditorUtility.SetDirty(collection);
+
+            var settingsObjects = AssetDatabase.LoadAllAssetsAtPath(
+                "ProjectSettings/GraphicsSettings.asset");
+            if (settingsObjects == null || settingsObjects.Length == 0)
+            {
+                throw new MissingReferenceException("GraphicsSettings.asset could not be loaded.");
+            }
+
+            var graphicsSettings = new SerializedObject(settingsObjects[0]);
+            var preloadedShaders = graphicsSettings.FindProperty("m_PreloadedShaders");
+            if (preloadedShaders == null || !preloadedShaders.isArray)
+            {
+                throw new MissingMemberException(
+                    "GraphicsSettings.m_PreloadedShaders was not found.");
+            }
+
+            for (var index = 0; index < preloadedShaders.arraySize; index++)
+            {
+                if (preloadedShaders.GetArrayElementAtIndex(index).objectReferenceValue == collection)
+                {
+                    graphicsSettings.ApplyModifiedPropertiesWithoutUndo();
+                    return;
+                }
+            }
+
+            var newIndex = preloadedShaders.arraySize;
+            preloadedShaders.InsertArrayElementAtIndex(newIndex);
+            preloadedShaders.GetArrayElementAtIndex(newIndex).objectReferenceValue = collection;
+            graphicsSettings.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AddShaderVariant(
+            ShaderVariantCollection collection,
+            ShaderVariantCollection.ShaderVariant variant)
+        {
+            if (!collection.Contains(variant))
+            {
+                collection.Add(variant);
+            }
         }
 
         private static UniversalRenderPipelineAsset GetOrCreateRenderPipeline()
         {
-            var existingPipeline =
-                AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(RenderPipelineAssetPath);
-            if (existingPipeline != null)
-            {
-                var existingRenderer =
-                    AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);
-                EnsureGaussianSplatRendererFeature(existingRenderer);
-                return existingPipeline;
-            }
-
             var sourceRenderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(SourceRendererPath);
             if (sourceRenderer == null)
             {
                 throw new MissingReferenceException($"STYLY renderer was not found: {SourceRendererPath}");
             }
 
-            var renderer = UnityEngine.Object.Instantiate(sourceRenderer);
-            renderer.name = "SceneSyncMobileRenderer";
-            AssetDatabase.CreateAsset(renderer, RendererPath);
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(RendererPath);
+            if (renderer == null)
+            {
+                renderer = UnityEngine.Object.Instantiate(sourceRenderer);
+                renderer.name = "SceneSyncMobileRenderer";
+                AssetDatabase.CreateAsset(renderer, RendererPath);
+            }
             EnsureGaussianSplatRendererFeature(renderer);
 
-            var renderPipeline = UniversalRenderPipelineAsset.Create(renderer);
-            renderPipeline.name = "SceneSyncMobileRPAsset";
-            AssetDatabase.CreateAsset(renderPipeline, RenderPipelineAssetPath);
+            var sourcePipeline =
+                AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(SourceRenderPipelinePath);
+            if (sourcePipeline == null)
+            {
+                throw new MissingReferenceException(
+                    $"STYLY render pipeline was not found: {SourceRenderPipelinePath}");
+            }
+
+            var renderPipeline =
+                AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(RenderPipelineAssetPath);
+            if (renderPipeline == null)
+            {
+                renderPipeline = UnityEngine.Object.Instantiate(sourcePipeline);
+                renderPipeline.name = "SceneSyncMobileRPAsset";
+                AssetDatabase.CreateAsset(renderPipeline, RenderPipelineAssetPath);
+            }
+            else
+            {
+                // Keep PICO/STYLY-specific render scale, MSAA, color precision and alpha
+                // behavior in sync. UniversalRenderPipelineAsset.Create(renderer) starts from
+                // generic defaults and breaks the headset passthrough background.
+                EditorUtility.CopySerialized(sourcePipeline, renderPipeline);
+                renderPipeline.name = "SceneSyncMobileRPAsset";
+            }
+
+            var serializedPipeline = new SerializedObject(renderPipeline);
+            var rendererDataList = serializedPipeline.FindProperty("m_RendererDataList");
+            if (rendererDataList == null || !rendererDataList.isArray)
+            {
+                throw new MissingMemberException(
+                    "UniversalRenderPipelineAsset.m_RendererDataList was not found.");
+            }
+            rendererDataList.arraySize = 1;
+            rendererDataList.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
+            var defaultRendererIndex = serializedPipeline.FindProperty("m_DefaultRendererIndex");
+            if (defaultRendererIndex != null)
+            {
+                defaultRendererIndex.intValue = 0;
+            }
+            serializedPipeline.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(renderPipeline);
             return renderPipeline;
         }
 
@@ -217,6 +438,17 @@ namespace SceneSync.UnityClient.Editor
             {
                 AssetDatabase.CreateFolder(parent, child);
             }
+        }
+    }
+
+    internal sealed class SceneSyncBuildPreprocessor : IPreprocessBuildWithReport
+    {
+        public int callbackOrder => -1000;
+
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            SceneSyncProjectSetup.EnsureRuntimeRenderingConfiguration();
+            AssetDatabase.SaveAssets();
         }
     }
 }
