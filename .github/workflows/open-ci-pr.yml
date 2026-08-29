@@ -1,0 +1,35 @@
+name: Open Android XR CI pull request
+
+on:
+  push:
+    branches:
+      - feat/android-xr-ci-builds
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pull request if needed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr view feat/android-xr-ci-builds --repo "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh pr create \
+              --repo "${{ github.repository }}" \
+              --base main \
+              --head feat/android-xr-ci-builds \
+              --title "ci: build Android XR APKs on pull requests" \
+              --body "$(printf '%s\n' \
+                '## Summary' \
+                '- Add GameCI PR matrix builds for Quest 3, PICO 4 Ultra, VIVE Focus Vision, and Android XR.' \
+                '- Configure target-specific OpenXR feature sets and vendor packages.' \
+                '- Verify ARM64 IL2CPP APK contents and retain build artifacts for 14 days.' \
+                '' \
+                '## Validation' \
+                '- Unity compile: 0 errors / 0 warnings' \
+                '- EditMode tests: 5 passed' \
+                '- Workflow YAML and all four package-selection paths validated')"
