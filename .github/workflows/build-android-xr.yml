@@ -140,6 +140,12 @@ jobs:
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
 
+      - name: Force complete Unity package restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- Library/PackageManager
+
       - name: Verify Unity CI secrets
         shell: bash
         env:
