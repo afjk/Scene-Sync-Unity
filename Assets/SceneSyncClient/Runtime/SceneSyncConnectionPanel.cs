@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace SceneSync.UnityClient
@@ -17,6 +18,8 @@ namespace SceneSync.UnityClient
         private const string RoomPreferenceKey = "SceneSync.Connection.Room";
         private const string NicknamePreferenceKey = "SceneSync.Connection.Nickname";
         private const float PlacementDistanceMeters = 1.2f;
+        private static readonly Color ConnectButtonColor = new(0.08f, 0.43f, 0.9f, 1f);
+        private static readonly Color DisconnectButtonColor = new(0.55f, 0.16f, 0.17f, 1f);
 
         [SerializeField] private SceneSyncClientController controller;
         [SerializeField] private Camera targetCamera;
@@ -24,8 +27,8 @@ namespace SceneSync.UnityClient
         [SerializeField] private GameObject minimizedPanel;
         [SerializeField] private InputField roomInput;
         [SerializeField] private InputField nicknameInput;
-        [SerializeField] private Button connectButton;
-        [SerializeField] private Button disconnectButton;
+        [FormerlySerializedAs("connectButton")]
+        [SerializeField] private Button connectionButton;
         [SerializeField] private Button minimizeButton;
         [SerializeField] private Button restoreButton;
         [SerializeField] private Text connectionStatus;
@@ -41,8 +44,7 @@ namespace SceneSync.UnityClient
         public GameObject MinimizedPanel => minimizedPanel;
         public InputField RoomInput => roomInput;
         public InputField NicknameInput => nicknameInput;
-        public Button ConnectButton => connectButton;
-        public Button DisconnectButton => disconnectButton;
+        public Button ConnectionButton => connectionButton;
         public Text ConnectionStatus => connectionStatus;
         public bool IsMinimized => minimizedPanel != null && minimizedPanel.activeSelf;
 
@@ -53,8 +55,7 @@ namespace SceneSync.UnityClient
             GameObject configuredMinimizedPanel,
             InputField configuredRoomInput,
             InputField configuredNicknameInput,
-            Button configuredConnectButton,
-            Button configuredDisconnectButton,
+            Button configuredConnectionButton,
             Button configuredMinimizeButton,
             Button configuredRestoreButton,
             Text configuredConnectionStatus,
@@ -67,8 +68,7 @@ namespace SceneSync.UnityClient
             minimizedPanel = configuredMinimizedPanel;
             roomInput = configuredRoomInput;
             nicknameInput = configuredNicknameInput;
-            connectButton = configuredConnectButton;
-            disconnectButton = configuredDisconnectButton;
+            connectionButton = configuredConnectionButton;
             minimizeButton = configuredMinimizeButton;
             restoreButton = configuredRestoreButton;
             connectionStatus = configuredConnectionStatus;
@@ -246,8 +246,7 @@ namespace SceneSync.UnityClient
                 return;
             }
 
-            connectButton?.onClick.AddListener(Connect);
-            disconnectButton?.onClick.AddListener(Disconnect);
+            connectionButton?.onClick.AddListener(ToggleConnection);
             minimizeButton?.onClick.AddListener(Minimize);
             restoreButton?.onClick.AddListener(Restore);
             if (controller != null)
@@ -264,8 +263,7 @@ namespace SceneSync.UnityClient
                 return;
             }
 
-            connectButton?.onClick.RemoveListener(Connect);
-            disconnectButton?.onClick.RemoveListener(Disconnect);
+            connectionButton?.onClick.RemoveListener(ToggleConnection);
             minimizeButton?.onClick.RemoveListener(Minimize);
             restoreButton?.onClick.RemoveListener(Restore);
             if (controller != null)
@@ -298,6 +296,17 @@ namespace SceneSync.UnityClient
             controller.SetConnectionSettings(room, nickname);
             controller.Connect();
             RefreshVisuals(true);
+        }
+
+        private void ToggleConnection()
+        {
+            if (controller != null && controller.IsConnected)
+            {
+                Disconnect();
+                return;
+            }
+
+            Connect();
         }
 
         private void Disconnect()
@@ -363,13 +372,29 @@ namespace SceneSync.UnityClient
             {
                 nicknameInput.interactable = !connected && !connecting;
             }
-            if (connectButton != null)
+            RefreshConnectionButton(connected, connecting);
+        }
+
+        private void RefreshConnectionButton(bool connected, bool connecting)
+        {
+            if (connectionButton == null)
             {
-                connectButton.interactable = !connected && !connecting;
+                return;
             }
-            if (disconnectButton != null)
+
+            connectionButton.interactable = !connecting;
+            var color = connected ? DisconnectButtonColor : ConnectButtonColor;
+            var colors = connectionButton.colors;
+            colors.normalColor = color;
+            colors.highlightedColor = Color.Lerp(color, Color.white, 0.18f);
+            colors.pressedColor = Color.Lerp(color, Color.black, 0.2f);
+            colors.selectedColor = colors.highlightedColor;
+            connectionButton.colors = colors;
+
+            var label = connectionButton.GetComponentInChildren<Text>(true);
+            if (label != null)
             {
-                disconnectButton.interactable = connected;
+                label.text = connected ? "Disconnect" : connecting ? "Connecting..." : "Connect";
             }
         }
     }
