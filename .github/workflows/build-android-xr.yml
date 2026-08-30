@@ -135,8 +135,9 @@ jobs:
             Library/ShaderCache.db
             Library/ShaderGraphs
             Library/SourceAssetDB
-          key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}-${{ github.run_attempt }}
           restore-keys: |
+            Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
 
       - name: Verify Unity CI secrets
