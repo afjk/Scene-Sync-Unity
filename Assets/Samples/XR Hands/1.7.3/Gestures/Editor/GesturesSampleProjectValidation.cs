@@ -122,6 +122,9 @@ namespace UnityEngine.XR.Hands.Samples.GestureSample.Editor
         [InitializeOnLoadMethod]
         static void RegisterProjectValidationRules()
         {
+            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
+                return;
+
             // Delay evaluating conditions for issues to give time for Package Manager and UPM cache to fully initialize.
             EditorApplication.delayCall += AddRulesAndRunCheck;
         }

@@ -2,6 +2,7 @@
   "name": "SceneSyncClient.Tests.Editor",
   "rootNamespace": "SceneSync.UnityClient.Tests.Editor",
   "references": [
+    "SceneSyncClient.Editor",
     "SceneSyncClient.Runtime",
     "com.afjk.scene-sync.Runtime",
     "com.afjk.scene-sync-rapier.Runtime",
