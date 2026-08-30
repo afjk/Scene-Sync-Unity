@@ -55,15 +55,6 @@ jobs:
         with:
           lfs: true
 
-      - name: Checkout pinned STYLY XR Rig source
-        uses: actions/checkout@v4
-        with:
-          repository: styly-dev/STYLY-XR-Rig
-          ref: 737d02a3741cdef9fe1f007bb3e0019911ce0b40
-          path: .ci/styly-xr-rig
-          sparse-checkout: Packages/com.styly.styly-xr-rig
-          persist-credentials: false
-
       - name: Select ${{ matrix.preset }} vendor package
         shell: bash
         env:
@@ -74,14 +65,6 @@ jobs:
 
           MANIFEST=Packages/manifest.json
           UPDATED_MANIFEST="$RUNNER_TEMP/manifest-${{ matrix.target }}.json"
-          STYLY_XR_RIG=Packages/com.styly.styly-xr-rig
-          mkdir -p "$STYLY_XR_RIG"
-          cp -R .ci/styly-xr-rig/Packages/com.styly.styly-xr-rig/. "$STYLY_XR_RIG/"
-          git apply \
-            --ignore-space-change \
-            --ignore-whitespace \
-            --directory="$STYLY_XR_RIG" \
-            .github/patches/styly-xr-rig-ci.patch
 
           jq \
             --arg package "$XR_PACKAGE_NAME" \
@@ -92,10 +75,15 @@ jobs:
                 .["com.unity.xr.androidxr-openxr"],
                 .["com.unity.xr.meta-openxr"],
                 .["com.unity.xr.openxr.picoxr"],
+                .["com.unity.polyspatial"],
+                .["com.unity.polyspatial.extensions"],
+                .["com.unity.polyspatial.serialization"],
+                .["com.unity.polyspatial.visionos"],
+                .["com.unity.polyspatial.xr"],
+                .["com.unity.xr.visionos"],
                 .["io.github.hatayama.uloopmcp"]
               )
               | .dependencies[$package] = $version
-              | .dependencies["com.styly.styly-xr-rig"] = "file:com.styly.styly-xr-rig"
               | .scopedRegistries |= map(
                   if .name == "OpenUPM" then
                     .scopes = (
@@ -122,7 +110,12 @@ jobs:
             --arg package "$XR_PACKAGE_NAME" \
             --arg version "$XR_PACKAGE_VERSION" \
             '.dependencies[$package] == $version
-              and .dependencies["com.styly.styly-xr-rig"] == "file:com.styly.styly-xr-rig"
+              and .dependencies["com.unity.polyspatial"] == null
+              and .dependencies["com.unity.polyspatial.extensions"] == null
+              and .dependencies["com.unity.polyspatial.serialization"] == null
+              and .dependencies["com.unity.polyspatial.visionos"] == null
+              and .dependencies["com.unity.polyspatial.xr"] == null
+              and .dependencies["com.unity.xr.visionos"] == null
               and .dependencies["io.github.hatayama.uloopmcp"] == null' \
             "$MANIFEST" > /dev/null
 
