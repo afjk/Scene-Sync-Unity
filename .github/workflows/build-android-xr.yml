@@ -123,7 +123,18 @@ jobs:
         id: unity-library-cache
         uses: actions/cache/restore@v4
         with:
-          path: Library
+          path: |
+            Library/ArtifactDB
+            Library/Artifacts
+            Library/Bee
+            Library/BuildPlayerData
+            Library/PackageManager
+            Library/PlayerDataCache
+            Library/ScriptAssemblies
+            Library/ShaderCache
+            Library/ShaderCache.db
+            Library/ShaderGraphs
+            Library/SourceAssetDB
           key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
@@ -192,9 +203,33 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Stop timed-out Unity build container
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t unity_containers < <(
+            docker ps --quiet \
+              --filter "ancestor=unityci/editor:ubuntu-${UNITY_VERSION}-android-3"
+          )
+          if (( ${#unity_containers[@]} > 0 )); then
+            docker stop --time 15 "${unity_containers[@]}"
+          fi
+
       - name: Save Unity Library cache
         if: always() && steps.unity-library-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: Library
+          path: |
+            Library/ArtifactDB
+            Library/Artifacts
+            Library/Bee
+            Library/BuildPlayerData
+            Library/PackageManager
+            Library/PlayerDataCache
+            Library/ScriptAssemblies
+            Library/ShaderCache
+            Library/ShaderCache.db
+            Library/ShaderGraphs
+            Library/SourceAssetDB
           key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
