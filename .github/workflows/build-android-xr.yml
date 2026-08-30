@@ -26,24 +26,32 @@ jobs:
         include:
           - preset: Meta Quest 3 Debug
             target: quest3
+            cache_family: vulkan
+            cache_writer: false
             package_name: com.unity.xr.meta-openxr
             package_version: 2.3.0
             apk: scene-sync-unity-quest3-debug.apk
             artifact: scene-sync-unity-quest3-debug
           - preset: PICO 4 Ultra Debug
             target: pico4-ultra
+            cache_family: opengles
+            cache_writer: true
             package_name: com.unity.xr.openxr.picoxr
             package_version: "https://github.com/Pico-Developer/PICO-Unity-OpenXR-SDK.git#release_1.4.0"
             apk: scene-sync-unity-pico4-ultra-debug.apk
             artifact: scene-sync-unity-pico4-ultra-debug
           - preset: VIVE Focus Vision Debug
             target: vive-focus-vision
+            cache_family: opengles
+            cache_writer: false
             package_name: com.htc.upm.vive.openxr
             package_version: 2.5.1
             apk: scene-sync-unity-vive-focus-vision-debug.apk
             artifact: scene-sync-unity-vive-focus-vision-debug
           - preset: Android XR Debug
             target: android-xr
+            cache_family: vulkan
+            cache_writer: true
             package_name: com.unity.xr.androidxr-openxr
             package_version: 1.0.1
             apk: scene-sync-unity-android-xr-debug.apk
@@ -131,13 +139,29 @@ jobs:
             Library/ShaderCache
             Library/ShaderCache.db
             Library/ShaderGraphs
-          key: UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}-${{ github.sha }}-${{ github.run_attempt }}
+          key: UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.cache_family }}-${{ github.sha }}-${{ github.run_attempt }}
           restore-keys: |
-            UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}-
+            UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.cache_family }}-
+
+      - name: Restore target-specific Unity build seed
+        id: target-build-seed
+        if: steps.unity-build-cache.outputs.cache-matched-key == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            Library/Bee
+            Library/BuildPlayerData
+            Library/PlayerDataCache
+            Library/ScriptAssemblies
+            Library/ShaderCache
+            Library/ShaderCache.db
+            Library/ShaderGraphs
+          key: UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-seed-${{ github.sha }}-${{ github.run_attempt }}
+          restore-keys: |
             UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
 
       - name: Restore legacy Unity Library seed
-        if: steps.unity-build-cache.outputs.cache-matched-key == ''
+        if: steps.unity-build-cache.outputs.cache-matched-key == '' && steps.target-build-seed.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -245,7 +269,7 @@ jobs:
           fi
 
       - name: Save Unity build cache
-        if: always() && steps.unity-build-cache.outputs.cache-hit != 'true'
+        if: always() && matrix.cache_writer && steps.unity-build-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
