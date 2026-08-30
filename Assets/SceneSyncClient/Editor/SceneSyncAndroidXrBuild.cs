@@ -56,6 +56,8 @@ namespace SceneSync.UnityClient.Editor
                 GraphicsDeviceType.OpenGLES3,
                 new[]
                 {
+                    "com.unity.openxr.feature.pico",
+                    "com.unity.openxr.pico.features",
                     "com.unity.openxr.feature.input.handtracking",
                     "com.pico.openxr.feature.passthrough",
                     "com.unity.openxr.feature.input.handinteraction",
@@ -262,6 +264,7 @@ namespace SceneSync.UnityClient.Editor
                 if (feature != null)
                 {
                     feature.enabled = false;
+                    EditorUtility.SetDirty(feature);
                 }
             }
 

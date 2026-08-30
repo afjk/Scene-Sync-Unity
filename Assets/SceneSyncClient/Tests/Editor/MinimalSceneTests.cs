@@ -66,12 +66,26 @@ namespace SceneSync.UnityClient.Tests.Editor
             Assert.That(profiles.All(profile => profile.FeatureIds.Length > 0), Is.True);
             Assert.That(profiles.All(profile => profile.MinimumApiLevel >= 24), Is.True);
 
+            var picoProfile = profiles.Single(profile => profile.Target == "pico4-ultra");
+            Assert.That(
+                picoProfile.FeatureIds,
+                Does.Contain("com.unity.openxr.feature.pico"));
+            Assert.That(
+                picoProfile.FeatureIds,
+                Does.Contain("com.unity.openxr.pico.features"));
+            Assert.That(
+                picoProfile.FeatureIds,
+                Does.Contain("com.unity.openxr.feature.input.PICO4Ultratouch"));
+
             const string workflowPath = ".github/workflows/build-android-xr.yml";
             Assert.That(File.Exists(workflowPath), Is.True, "Android XR workflow is missing.");
             var workflow = File.ReadAllText(workflowPath);
             Assert.That(workflow, Does.Contain("game-ci/unity-builder@v4"));
             Assert.That(workflow, Does.Contain("retention-days: 14"));
             Assert.That(workflow, Does.Contain("buildMethod: " + SceneSyncAndroidXrBuild.BuildMethod));
+            Assert.That(
+                workflow,
+                Does.Contain(".[\"com.unity.polyspatial.visionos\"]"));
             foreach (var profile in profiles)
             {
                 Assert.That(workflow, Does.Contain("target: " + profile.Target));
