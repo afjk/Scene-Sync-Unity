@@ -119,8 +119,25 @@ jobs:
               and .dependencies["io.github.hatayama.uloopmcp"] == null' \
             "$MANIFEST" > /dev/null
 
-      - name: Restore Unity Library cache
-        id: unity-library-cache
+      - name: Restore Unity build cache
+        id: unity-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            Library/Bee
+            Library/BuildPlayerData
+            Library/PlayerDataCache
+            Library/ScriptAssemblies
+            Library/ShaderCache
+            Library/ShaderCache.db
+            Library/ShaderGraphs
+          key: UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}-${{ github.sha }}-${{ github.run_attempt }}
+          restore-keys: |
+            UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}-
+            UnityBuild-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
+
+      - name: Restore legacy Unity Library seed
+        if: steps.unity-build-cache.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -140,11 +157,15 @@ jobs:
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-
 
-      - name: Force complete Unity package restore
+      - name: Rebuild Unity asset and package databases
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf -- Library/PackageManager
+          rm -rf -- \
+            Library/ArtifactDB \
+            Library/Artifacts \
+            Library/PackageManager \
+            Library/SourceAssetDB
 
       - name: Verify Unity CI secrets
         shell: bash
@@ -223,20 +244,16 @@ jobs:
             docker stop --time 15 "${unity_containers[@]}"
           fi
 
-      - name: Save Unity Library cache
-        if: always() && steps.unity-library-cache.outputs.cache-hit != 'true'
+      - name: Save Unity build cache
+        if: always() && steps.unity-build-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
-            Library/ArtifactDB
-            Library/Artifacts
             Library/Bee
             Library/BuildPlayerData
-            Library/PackageManager
             Library/PlayerDataCache
             Library/ScriptAssemblies
             Library/ShaderCache
             Library/ShaderCache.db
             Library/ShaderGraphs
-            Library/SourceAssetDB
-          key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
+          key: ${{ steps.unity-build-cache.outputs.cache-primary-key }}
