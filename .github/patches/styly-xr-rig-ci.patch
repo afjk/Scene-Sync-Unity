@@ -1,0 +1,28 @@
+diff --git a/Editor/Initialization/RestartUnityEditorAfterPackageInstallation.cs b/Editor/Initialization/RestartUnityEditorAfterPackageInstallation.cs
+index fcb988e..688321f 100644
+--- a/Editor/Initialization/RestartUnityEditorAfterPackageInstallation.cs
++++ b/Editor/Initialization/RestartUnityEditorAfterPackageInstallation.cs
+@@ -10,6 +10,9 @@ class RestartUnityEditorAfterPackageInstallation
+     [InitializeOnLoadMethod]
+     static void ExecuteOnceAfterPackageInstallation()
+     {
++        if (UnityEngine.Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
++            return;
++
+         if (IsFirstRun.IsFirstRunForVersion())
+         {
+             if (EditorUtility.DisplayDialog("Restart Unity",
+diff --git a/Editor/Initialization/InstallRequiredSamples.cs b/Editor/Initialization/InstallRequiredSamples.cs
+index c84a221..70905c3 100644
+--- a/Editor/Initialization/InstallRequiredSamples.cs
++++ b/Editor/Initialization/InstallRequiredSamples.cs
+@@ -22,6 +22,9 @@ namespace Styly.XRRig
+         [InitializeOnLoadMethod]
+         public static void InstallPackageSamples()
+         {
++            if (Application.isBatchMode || AssetDatabase.IsAssetImportWorkerProcess())
++                return;
++
+             // Get the path of this package
+             var MyPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssembly(System.Reflection.MethodInfo.GetCurrentMethod().DeclaringType.Assembly);
+             string MyPackagePath = MyPackageInfo.resolvedPath;
