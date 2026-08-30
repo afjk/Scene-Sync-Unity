@@ -597,20 +597,13 @@ namespace SceneSync.UnityClient.Editor
                 new Vector2(0f, -90f),
                 new Color(1f, 0.48f, 0.4f, 1f));
 
-            var connectButton = CreateButton(
-                "ConnectButton",
+            var connectionButton = CreateButton(
+                "ConnectionButton",
                 fullPanel.rectTransform,
                 "Connect",
-                new Vector2(210f, 58f),
-                new Vector2(105f, -166f),
+                new Vector2(270f, 58f),
+                new Vector2(205f, -166f),
                 new Color(0.08f, 0.43f, 0.9f, 1f));
-            var disconnectButton = CreateButton(
-                "DisconnectButton",
-                fullPanel.rectTransform,
-                "Disconnect",
-                new Vector2(210f, 58f),
-                new Vector2(335f, -166f),
-                new Color(0.55f, 0.16f, 0.17f, 1f));
 
             var minimizedPanel = CreateImage(
                 "MinimizedPanel",
@@ -645,8 +638,7 @@ namespace SceneSync.UnityClient.Editor
                 minimizedPanel.gameObject,
                 roomInput,
                 nicknameInput,
-                connectButton,
-                disconnectButton,
+                connectionButton,
                 minimizeButton,
                 restoreButton,
                 connectionStatus,

@@ -200,10 +200,26 @@ namespace SceneSync.UnityClient.Tests.Editor
             Assert.That(panel.FullPanel.activeSelf, Is.True);
             Assert.That(panel.MinimizedPanel, Is.Not.Null);
             Assert.That(panel.MinimizedPanel.activeSelf, Is.False);
-            Assert.That(panel.ConnectButton, Is.Not.Null);
-            Assert.That(panel.DisconnectButton, Is.Not.Null);
+            Assert.That(panel.ConnectionButton, Is.Not.Null);
+            Assert.That(panel.ConnectionButton.name, Is.EqualTo("ConnectionButton"));
+            Assert.That(
+                panel.FullPanel.transform.Find("DisconnectButton"),
+                Is.Null,
+                "Connect and Disconnect must share one toggle button.");
+            AssertUiElementFitsInside(panel.ConnectionButton.GetComponent<RectTransform>(), panel.FullPanel);
             AssertSystemKeyboardInput(panel.RoomInput);
             AssertSystemKeyboardInput(panel.NicknameInput);
+        }
+
+        private static void AssertUiElementFitsInside(RectTransform element, GameObject parent)
+        {
+            var parentRect = parent.GetComponent<RectTransform>();
+            var halfParentSize = parentRect.rect.size * 0.5f;
+            var halfElementSize = element.rect.size * 0.5f;
+            var position = element.anchoredPosition;
+
+            Assert.That(Mathf.Abs(position.x) + halfElementSize.x, Is.LessThanOrEqualTo(halfParentSize.x));
+            Assert.That(Mathf.Abs(position.y) + halfElementSize.y, Is.LessThanOrEqualTo(halfParentSize.y));
         }
 
         private static void AssertSystemKeyboardInput(InputField inputField)
