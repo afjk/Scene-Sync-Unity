@@ -8,6 +8,7 @@ using UnityEditor.Build.Reporting;
 using UnityEditor.XR.OpenXR.Features;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.XR.OpenXR;
 
 namespace SceneSync.UnityClient.Editor
@@ -58,7 +59,6 @@ namespace SceneSync.UnityClient.Editor
                 {
                     "com.unity.openxr.feature.pico",
                     "com.unity.openxr.pico.features",
-                    "com.unity.openxr.feature.input.handtracking",
                     "com.pico.openxr.feature.passthrough",
                     "com.unity.openxr.feature.input.handinteraction",
                     "com.unity.openxr.feature.input.PICO4touch",
@@ -150,6 +150,7 @@ namespace SceneSync.UnityClient.Editor
             ConfigurePlayer(profile);
             ConfigureOpenXr(profile);
             SceneSyncProjectSetup.EnsureRuntimeRenderingConfiguration();
+            ConfigureShaderStripping();
             AssetDatabase.SaveAssets();
 
             var scenes = EditorBuildSettings.scenes
@@ -218,6 +219,15 @@ namespace SceneSync.UnityClient.Editor
             PlayerSettings.SetGraphicsAPIs(
                 BuildTarget.Android,
                 new[] { profile.GraphicsApi });
+        }
+
+        private static void ConfigureShaderStripping()
+        {
+            if (GraphicsSettings.TryGetRenderPipelineSettings<URPShaderStrippingSetting>(
+                    out var shaderStrippingSettings))
+            {
+                shaderStrippingSettings.stripUnusedPostProcessingVariants = true;
+            }
         }
 
         private static void ConfigureOpenXr(SceneSyncAndroidXrBuildProfile profile)

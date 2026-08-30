@@ -76,11 +76,18 @@ namespace SceneSync.UnityClient.Tests.Editor
             Assert.That(
                 picoProfile.FeatureIds,
                 Does.Contain("com.unity.openxr.feature.input.PICO4Ultratouch"));
+            Assert.That(
+                picoProfile.FeatureIds,
+                Does.Not.Contain("com.unity.openxr.feature.input.handtracking"),
+                "The deprecated Microsoft Hand Interaction Profile fails PICO validation.");
 
             const string workflowPath = ".github/workflows/build-android-xr.yml";
             Assert.That(File.Exists(workflowPath), Is.True, "Android XR workflow is missing.");
             var workflow = File.ReadAllText(workflowPath);
             Assert.That(workflow, Does.Contain("game-ci/unity-builder@v4"));
+            Assert.That(workflow, Does.Contain("actions/cache/restore@v4"));
+            Assert.That(workflow, Does.Contain("actions/cache/save@v4"));
+            Assert.That(workflow, Does.Not.Contain("jlumbroso/free-disk-space"));
             Assert.That(workflow, Does.Contain("retention-days: 14"));
             Assert.That(workflow, Does.Contain("buildMethod: " + SceneSyncAndroidXrBuild.BuildMethod));
             Assert.That(

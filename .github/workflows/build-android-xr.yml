@@ -119,19 +119,9 @@ jobs:
               and .dependencies["io.github.hatayama.uloopmcp"] == null' \
             "$MANIFEST" > /dev/null
 
-      - name: Free up disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          android: true
-          dotnet: true
-          haskell: true
-          tool-cache: true
-          docker-images: true
-          large-packages: false
-          swap-storage: true
-
-      - name: Cache Unity Library
-        uses: actions/cache@v4
+      - name: Restore Unity Library cache
+        id: unity-library-cache
+        uses: actions/cache/restore@v4
         with:
           path: Library
           key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-Android-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -201,3 +191,10 @@ jobs:
           path: build/${{ matrix.apk }}
           if-no-files-found: error
           retention-days: 14
+
+      - name: Save Unity Library cache
+        if: always() && steps.unity-library-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: Library
+          key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
